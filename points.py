@@ -1,3 +1,4 @@
+from matplotlib.lines import lineStyles
 import matplotlib.pyplot as plt
 import numpy as np
 import math
@@ -7,7 +8,7 @@ from numpy import ones,vstack
 from numpy.linalg import lstsq
 from shapely.geometry import LineString
 from shapely.geometry import Point
-#from generate import generate_track
+from generate import generate_track
 
 '''FS rules states that the track is:
 minimum 3m wide
@@ -20,13 +21,13 @@ minium radius of a turn is 3m from the inner circle
 TRACK_WIDTH = 30
 INTERPOLATION_RESOLUTION = 30
 CLOSE_LOOP = 0
-dist_bt_cones = random.randint(20, 50)
+dist_bt_cones = random.randint(13, 50)
 
 #plot 1 for drawing
-fig = plt.figure()
-ax = fig.add_subplot(111)
-ax.set_xlim([0, 600])
-ax.set_ylim([0, 500])
+#fig = plt.figure()
+#ax = fig.add_subplot(111)
+#ax.set_xlim([0, 600])
+#ax.set_ylim([0, 500])
 
 #function to plot a shape from coords
 def plot_coords(coords):
@@ -35,8 +36,8 @@ def plot_coords(coords):
     plt.plot(x,y)
 
 #drawing shape by dragging function
-#middle = generate_track()
-middle = []
+middle = generate_track()
+#middle = []
 def onclick(event):
     try:
         print('button=%d, x=%d, y=%d, xdata=%f, ydata=%f' % 
@@ -77,9 +78,9 @@ def distance(points):
     return sum(dist)
 
 #append shape on plot 1
-cid = fig.canvas.mpl_connect('motion_notify_event', onclick)
-plt.show()
-print(middle)
+#cid = fig.canvas.mpl_connect('motion_notify_event', onclick)
+#plt.show()
+#print(middle)
 
 # for i in range(10):
 #     x = random.randint(0,900)
@@ -127,12 +128,12 @@ left_cones = int(distance(left_side) / dist_bt_cones)
 
 xrnew, yrnew = ip_curve(right_side, right_cones)
 xlnew, ylnew = ip_curve(left_side, left_cones)
-
 #plot 2 with cones
-plt.plot(xrnew,yrnew, marker="o", markersize=2, markeredgecolor="blue")
-plt.plot(xlnew,ylnew, marker="o", markersize=2, markeredgecolor="yellow")
+plt.axes().set_facecolor("lightgrey")
 
-#plot 2 with cones
-plt.text(0, 800, "odległość między pachołkami wynosi {}0 cm".format(dist_bt_cones))
-plt.axis([0, 900, 0, 750])
+plt.plot(xrnew,yrnew, marker="o", markersize=2, markeredgecolor="blue", linestyle="None")
+plt.plot(xlnew,ylnew, marker="o", markersize=2, markeredgecolor="yellow", linestyle="None")
+plt.plot(0,0,marker="o", markersize=5, markeredgecolor="green")
+plt.text(-300, 320, "odległość między pachołkami wynosi {}0 cm".format(dist_bt_cones))
+plt.axis([-300, 300, -50, 300])
 plt.show()

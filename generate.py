@@ -23,7 +23,7 @@ def generate_track():
                 rand_points.append(pnt)
         return rand_points
 
-    for i in range(10):
+    for i in range(9):
         #calculating angle
         p1 = points[-2]
         p2 = points[-1]
@@ -54,16 +54,16 @@ def generate_track():
     for i, val in enumerate(points):
         point_list.append([points[i].x, points[i].y])
     #print(point_list)
-    return points
+    return point_list
 
-points = generate_track()
+print(generate_track())
 
 # xp,yp = rotated_polygon.exterior.xy
 # plt.plot(xp,yp)
 
-xs = [point.x for point in points]
-ys = [point.y for point in points]
-plt.scatter(xs, ys, color="red")
-plt.show()
+# xs = [point.x for point in points]
+# ys = [point.y for point in points]
+# plt.scatter(xs, ys, color="red")
+# plt.show()
 
 
