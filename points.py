@@ -10,7 +10,9 @@ from generate import generate_track
 import time
 import threading
 from csv import writer
-a = time.time()
+import multiprocessing as mp
+
+
 '''FS rules states that the track is:
 minimum 3m wide
 max cone distance is 5m
@@ -18,9 +20,8 @@ minium radius of a turn is 3m from the inner circle
 1 pixel is 10 cm
 '''
 
-#data per one thread
-#10 threads currently
-DATASET_SIZE = 18_000
+#data per process (5 processes)
+DATASET_SIZE = 30_000
 
 #track settings
 TRACK_WIDTH = 30
@@ -188,14 +189,14 @@ class DatasetGen:
         t = threading.Thread(target=self.thread)
         t.start()
 
-
-DatasetGen()
-DatasetGen()
-DatasetGen()
-DatasetGen()
-DatasetGen()
-DatasetGen()
-DatasetGen()
-DatasetGen()
-DatasetGen()
-DatasetGen()
+if __name__ == "__main__":
+    p1 = mp.Process(target=DatasetGen)
+    p2 = mp.Process(target=DatasetGen)
+    p3 = mp.Process(target=DatasetGen)
+    p4 = mp.Process(target=DatasetGen)
+    p5 = mp.Process(target=DatasetGen)
+    p1.start()
+    p2.start()
+    p3.start()
+    p4.start()
+    p5.start()
