@@ -1,4 +1,3 @@
-from matplotlib.lines import lineStyles
 import matplotlib.pyplot as plt
 import numpy as np
 import math
@@ -7,9 +6,11 @@ from scipy import interpolate
 from numpy import ones,vstack
 from numpy.linalg import lstsq
 from shapely.geometry import LineString
-from shapely.geometry import Point
 from generate import generate_track
-
+import time
+import threading
+from csv import writer
+a = time.time()
 '''FS rules states that the track is:
 minimum 3m wide
 max cone distance is 5m
@@ -17,18 +18,18 @@ minium radius of a turn is 3m from the inner circle
 1 pixel is 10 cm
 '''
 
+#data per one thread
+#10 threads currently
+DATASET_SIZE = 18_000
+
 #track settings
 TRACK_WIDTH = 30
 INTERPOLATION_RESOLUTION = 30
 CLOSE_LOOP = 0
 dist_bt_cones = random.randint(13, 50)
 
-#plot 1 for drawing
-#fig = plt.figure()
-#ax = fig.add_subplot(111)
-#ax.set_xlim([0, 600])
-#ax.set_ylim([0, 500])
 
+'''
 #function to plot a shape from coords
 def plot_coords(coords):
     pts = list(coords)
@@ -36,8 +37,6 @@ def plot_coords(coords):
     plt.plot(x,y)
 
 #drawing shape by dragging function
-middle = generate_track()
-#middle = []
 def onclick(event):
     try:
         print('button=%d, x=%d, y=%d, xdata=%f, ydata=%f' % 
@@ -47,93 +46,156 @@ def onclick(event):
         middle.append([event.x, event.y])
     except:
         pass
+    '''
+class DatasetGen:
+    dataframe = []
 
-#intersection of 2 lists
-def intersection(lst1, lst2):
-    lst3 = [value for value in lst1 if value in lst2]
-    return lst3
+    #intersection of 2 lists
+    def intersection(self, lst1, lst2):
+        lst3 = [value for value in lst1 if value in lst2]
+        return lst3
 
-#interpolation of a spline
-def ip_curve(points, ip_res):
-#interpolated curve, based on given points
-    nodes = np.array(points)  #nodes for spline
-    x = nodes[:,0]
-    y = nodes[:,1]
-    tck,u     = interpolate.splprep( [x,y] ,s = 0 )
-    xnew,ynew = interpolate.splev( np.linspace( 0, 1, ip_res ), tck,der = 0)
-    return xnew, ynew
+    #interpolation of a spline
+    def ip_curve(self, points, ip_res):
+    #interpolated curve, based on given points
+        nodes = np.array(points)  #nodes for spline
+        x = nodes[:,0]
+        y = nodes[:,1]
+        tck,u     = interpolate.splprep( [x,y] ,s = 0 )
+        xnew,ynew = interpolate.splev( np.linspace( 0, 1, ip_res ), tck,der = 0)
+        return xnew, ynew
 
-#calculate distance of lines
-def distance(points):
-    dist = []
-    try:
-        for i, val in enumerate(points):
-            x1_tmp = points[i][0]
-            y1_tmp = points[i][1]
-            x2_tmp = points[i+1][0]
-            y2_tmp = points[i+1][1]
-            dbp = math.sqrt((x2_tmp - x1_tmp)**2 + (y2_tmp - y1_tmp)**2)
-            dist.append(dbp)
-    except: pass
-    return sum(dist)
+    #calculate distance of lines
+    def distance(self, points):
+        dist = []
+        try:
+            for i, val in enumerate(points):
+                x1_tmp = points[i][0]
+                y1_tmp = points[i][1]
+                x2_tmp = points[i+1][0]
+                y2_tmp = points[i+1][1]
+                dbp = math.sqrt((x2_tmp - x1_tmp)**2 + (y2_tmp - y1_tmp)**2)
+                dist.append(dbp)
+        except: pass
+        return sum(dist)
 
-#append shape on plot 1
-#cid = fig.canvas.mpl_connect('motion_notify_event', onclick)
-#plt.show()
-#print(middle)
+    #plot with cones
+    def create_plot(self, xrnew,yrnew, xlnew,ylnew):
+        plt.axes().set_facecolor("lightgrey")
 
-# for i in range(10):
-#     x = random.randint(0,900)
-#     y = random.randint(0,750)
-#     middle.append([x,y])
+        plt.plot(xrnew,yrnew, marker="o", markersize=2, markeredgecolor="blue", linestyle="None")
+        plt.plot(xlnew,ylnew, marker="o", markersize=2, markeredgecolor="yellow", linestyle="None")
+        plt.plot(0,0,marker="o", markersize=5, markeredgecolor="green")
+        plt.text(-300, 320, "odległość między pachołkami wynosi {}0 cm".format(dist_bt_cones))
+        plt.axis([-300, 300, -50, 300])
+        plt.show()
+
+    
+    def dataset(self, xrnew, yrnew, xlnew, ylnew):
+        y1 = 0 #left
+        y2 = 1
+
+        Xl1 = [xlnew[0], ylnew[0]]
+        Xl2 = [xlnew[1], ylnew[1]]
+        Xl3 = [xlnew[2], ylnew[2]]
+
+        Xr1 = [xrnew[-1], yrnew[-1]]
+        Xr2 = [xrnew[-2], yrnew[-2]]
+        Xr3 = [xrnew[-3], yrnew[-3]]
+
+        data = [(Xl1, y1), (Xl2, y1), (Xl3, y1), (Xr1, y2), (Xr2, y2), (Xr3, y2)]
+
+        random.shuffle(data)    
+                                    #normalizing data
+        dataX1x = ((data[0][0][0]) + 80) /160
+        dataX2x = ((data[1][0][0]) + 80) /160
+        dataX3x = ((data[2][0][0]) + 80) /160
+        dataX4x = ((data[3][0][0]) + 80) /160
+        dataX5x = ((data[4][0][0]) + 80) /160
+        dataX6x = ((data[5][0][0]) + 80) /160
+
+        dataX1y = ((data[0][0][1]) + 10) /160
+        dataX2y = ((data[1][0][1]) + 10) /160
+        dataX3y = ((data[2][0][1]) + 10) /160
+        dataX4y = ((data[3][0][1]) + 10) /160
+        dataX5y = ((data[4][0][1]) + 10) /160
+        dataX6y = ((data[5][0][1]) + 10) /160
+
+        datay1 = (data[0][1])
+        datay2 = (data[1][1])
+        datay3 = (data[2][1])
+        datay4 = (data[3][1])
+        datay5 = (data[4][1])
+        datay6 = (data[5][1])
+        
+        dataset_values = [dataX1x, dataX2x, dataX3x, dataX4x, dataX5x, dataX6x,  dataX1y, dataX2y, dataX3y, dataX4y, dataX5y, dataX6y,  datay1, datay2, datay3, datay4, datay5, datay6]
+        return dataset_values
+
+    def set_cones(self):
+        middle = generate_track()
+        xnew,ynew = self.ip_curve(middle, 1000)
+
+        #access coords with shapely
+        coords = []
+        for i, val in enumerate(ynew):
+            coords.append((xnew[i],ynew[i]))
+        track = LineString(coords)
+
+        #draw polygons including cone lines
+        left_hand_side  = track.buffer(TRACK_WIDTH/2 , single_sided=True)
+        right_hand_side = track.buffer(-TRACK_WIDTH/2, single_sided=True)
+        both_sides      = track.buffer(TRACK_WIDTH/2, single_sided=False)
+
+        xl,yl = left_hand_side.exterior.xy
+        xr,yr = right_hand_side.exterior.xy
+        xb,yb = both_sides.exterior.xy
+
+        #getting points from polygons
+        left_list = []
+        right_list = []
+        both_list = []
+        for i, val in enumerate(yl): left_list.append((xl[i],yl[i]))
+        for i, val in enumerate(yr): right_list.append((xr[i],yr[i]))
+        for i, val in enumerate(yb): both_list.append((xb[i],yb[i]))
+
+        #polygons above include middle of the road, so to get only the outter side
+        #i want only the ones that intersect points with a list containing both sides
+        #that way i already have seperate left and right lists of points
+        right_side = self.intersection(both_list, right_list)
+        left_side  = self.intersection(left_list, both_list)
+
+        #print(dist_bt_cones)
+
+        #interpolating to get right distance between cones
+        right_cones_amount = int(self.distance(right_side) / dist_bt_cones)
+        left_cones_amount = int(self.distance(left_side) / dist_bt_cones)
+
+        xrnew, yrnew = self.ip_curve(right_side, right_cones_amount)
+        xlnew, ylnew = self.ip_curve(left_side, left_cones_amount)
+        return  xrnew, yrnew, xlnew, ylnew
+
+    def thread(self):
+        for i in range(DATASET_SIZE):
+            xrnew, yrnew, xlnew, ylnew = self.set_cones()
+            row = self.dataset(xrnew, yrnew, xlnew, ylnew)
+            with open("cones.csv", "a", newline="") as f_object:
+                writer_object = writer(f_object)
+                writer_object.writerow(row)
+                f_object.close()
+        #self.create_plot(xrnew,yrnew, xlnew,ylnew)
+
+    def __init__(self):
+        t = threading.Thread(target=self.thread)
+        t.start()
 
 
-if CLOSE_LOOP == True: middle.append(middle[0])    #close the shape
-xnew,ynew = ip_curve(middle, 1000)
-
-#access coords with shapely
-coords = []
-for i, val in enumerate(ynew):
-    coords.append((xnew[i],ynew[i]))
-track = LineString(coords)
-
-#draw polygons including cone lines
-left_hand_side  = track.buffer(TRACK_WIDTH/2 , single_sided=True)
-right_hand_side = track.buffer(-TRACK_WIDTH/2, single_sided=True)
-both_sides      = track.buffer(TRACK_WIDTH/2, single_sided=False)
-
-xl,yl = left_hand_side.exterior.xy
-xr,yr = right_hand_side.exterior.xy
-xb,yb = both_sides.exterior.xy
-
-#getting points from polygons
-left_list = []
-right_list = []
-both_list = []
-for i, val in enumerate(yl): left_list.append((xl[i],yl[i]))
-for i, val in enumerate(yr): right_list.append((xr[i],yr[i]))
-for i, val in enumerate(yb): both_list.append((xb[i],yb[i]))
-
-#polygons above include middle of the road, so to get only the outter side
-#i want only the ones that intersect points with a list containing both sides
-#that way i already have seperate left and right lists of points
-right_side = intersection(both_list, right_list)
-left_side  = intersection(left_list, both_list)
-
-print(dist_bt_cones)
-
-#interpolating to get right distance between cones
-right_cones = int(distance(right_side) / dist_bt_cones)
-left_cones = int(distance(left_side) / dist_bt_cones)
-
-xrnew, yrnew = ip_curve(right_side, right_cones)
-xlnew, ylnew = ip_curve(left_side, left_cones)
-#plot 2 with cones
-plt.axes().set_facecolor("lightgrey")
-
-plt.plot(xrnew,yrnew, marker="o", markersize=2, markeredgecolor="blue", linestyle="None")
-plt.plot(xlnew,ylnew, marker="o", markersize=2, markeredgecolor="yellow", linestyle="None")
-plt.plot(0,0,marker="o", markersize=5, markeredgecolor="green")
-plt.text(-300, 320, "odległość między pachołkami wynosi {}0 cm".format(dist_bt_cones))
-plt.axis([-300, 300, -50, 300])
-plt.show()
+DatasetGen()
+DatasetGen()
+DatasetGen()
+DatasetGen()
+DatasetGen()
+DatasetGen()
+DatasetGen()
+DatasetGen()
+DatasetGen()
+DatasetGen()
