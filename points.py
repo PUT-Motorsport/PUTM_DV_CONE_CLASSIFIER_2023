@@ -7,11 +7,11 @@ from numpy import ones,vstack
 from numpy.linalg import lstsq
 from shapely.geometry import LineString
 from generate import generate_track
-import time
-import threading
+import alphashape
 from csv import writer
 import multiprocessing as mp
-
+from descartes import PolygonPatch
+from scipy.spatial import ConvexHull, convex_hull_plot_2d
 
 '''FS rules states that the track is:
 minimum 3m wide
@@ -21,13 +21,13 @@ minium radius of a turn is 3m from the inner circle
 '''
 
 #data per process (5 processes)
-DATASET_SIZE = 30_000
+DATASET_SIZE = 1
 
 #track settings
 TRACK_WIDTH = 30
 INTERPOLATION_RESOLUTION = 30
 CLOSE_LOOP = 0
-dist_bt_cones = random.randint(13, 50)
+dist_bt_cones = 5 #random.randint(13, 50)
 
 
 '''
@@ -62,7 +62,7 @@ class DatasetGen:
         nodes = np.array(points)  #nodes for spline
         x = nodes[:,0]
         y = nodes[:,1]
-        tck,u     = interpolate.splprep( [x,y] ,s = 0 )
+        tck,u     = interpolate.splprep( [x,y], s=0, k=2)
         xnew,ynew = interpolate.splev( np.linspace( 0, 1, ip_res ), tck,der = 0)
         return xnew, ynew
 
@@ -95,7 +95,7 @@ class DatasetGen:
     def dataset(self, xrnew, yrnew, xlnew, ylnew):
         y1 = 0 #left
         y2 = 1
-
+        
         Xl1 = [xlnew[0], ylnew[0]]
         Xl2 = [xlnew[1], ylnew[1]]
         Xl3 = [xlnew[2], ylnew[2]]
@@ -133,7 +133,7 @@ class DatasetGen:
         return dataset_values
 
     def set_cones(self):
-        middle = generate_track()
+        middle = [[0,0],[0,10],[22.5,32.5],[45, 10],[45,0]]#generate_track(), [[0,0],[0,10],[22.5,32.5],[45, 10],[45,0]] = worst case
         xnew,ynew = self.ip_curve(middle, 1000)
 
         #access coords with shapely
@@ -173,30 +173,65 @@ class DatasetGen:
 
         xrnew, yrnew = self.ip_curve(right_side, right_cones_amount)
         xlnew, ylnew = self.ip_curve(left_side, left_cones_amount)
-        return  xrnew, yrnew, xlnew, ylnew
+
+        #self.create_plot(xrnew,yrnew, xlnew,ylnew)
+        return  np.round(xrnew,1),np.round( yrnew), np.round(xlnew), np.round(ylnew)
 
     def thread(self):
         for i in range(DATASET_SIZE):
+            points = []
             xrnew, yrnew, xlnew, ylnew = self.set_cones()
-            row = self.dataset(xrnew, yrnew, xlnew, ylnew)
-            with open("cones.csv", "a", newline="") as f_object:
-                writer_object = writer(f_object)
-                writer_object.writerow(row)
-                f_object.close()
-        #self.create_plot(xrnew,yrnew, xlnew,ylnew)
+            for i, val in enumerate(xrnew):
+                points.append([xrnew[i], yrnew[i]])
+            for i, val in enumerate(xlnew):
+                points.append([xlnew[i], ylnew[i]])
+            
+            points = np.array(points)
+
+            print(points)
+            # hull = ConvexHull(points)
+
+            # fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10, 3))
+
+            # for ax in (ax1, ax2):
+            #     ax.plot(points[:, 0], points[:, 1], '.', color='k')
+            #     if ax == ax1:
+            #         ax.set_title('Given points')
+            #     else:
+            #         ax.set_title('Convex hull')
+            #         for simplex in hull.simplices:
+            #             ax.plot(points[simplex, 0], points[simplex, 1], 'c')
+            #         ax.plot(points[hull.vertices, 0], points[hull.vertices, 1], 'o', mec='r', color='none', lw=1, markersize=10)
+            #     ax.set_xticks(range(10))
+            #     ax.set_yticks(range(10))
+            # plt.show()
+            
+            # row = self.dataset(xrnew, yrnew, xlnew, ylnew)
+            # with open("cones.csv", "a", newline="") as f_object:
+            #     writer_object = writer(f_object)
+            #     writer_object.writerow(row)
+            #     f_object.close()
+        #alpha_shape = alphashape.alphashape(points, 0.02)
+
+        fig, ax = plt.subplots()
+        ax.scatter(*zip(*points))
+        #ax.add_patch(PolygonPatch(alpha_shape, alpha=0.2))
+        plt.show()
 
     def __init__(self):
-        t = threading.Thread(target=self.thread)
-        t.start()
+        self.thread()
 
-if __name__ == "__main__":
-    p1 = mp.Process(target=DatasetGen)
-    p2 = mp.Process(target=DatasetGen)
-    p3 = mp.Process(target=DatasetGen)
-    p4 = mp.Process(target=DatasetGen)
-    p5 = mp.Process(target=DatasetGen)
-    p1.start()
-    p2.start()
-    p3.start()
-    p4.start()
-    p5.start()
+
+DatasetGen()
+
+# if __name__ == "__main__":
+# #     p1 = mp.Process(target=DatasetGen)
+#     p2 = mp.Process(target=DatasetGen)
+#     p3 = mp.Process(target=DatasetGen)
+#     p4 = mp.Process(target=DatasetGen)
+#     p5 = mp.Process(target=DatasetGen)
+#     p1.start()
+#     p2.start()
+#     p3.start()
+#     p4.start()
+#     p5.start()
