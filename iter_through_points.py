@@ -6,72 +6,71 @@ from shapely import affinity
 import math
 import time
 #shape
-polygon = Polygon([[0.0, 0], [5,0], [40, 30], [30, 42], [20, 47], [10, 50], 
-                [0, 51], [-10, 50], [-20, 47], [-30, 42], [-40, 30], [-5,0]])
+polygon = Polygon([[0.0, 1], [5,1], [40, 30], [30, 42], [20, 47], [10, 50], 
+                [0, 51], [-10, 50], [-20, 47], [-30, 42], [-40, 30], [-5,1]])
 
-numpy_points = np.array([[20,0],
- [192.7, 139. ],
- [183.1 ,144. ],
- [173.  ,146. ],
- [162.5 ,147. ],
- [152.1 ,146. ],
- [141.8 ,144. ],
- [131.6 ,141. ],
- [121.7 ,138. ],
- [112.2 ,134. ],
- [102.8 ,129. ],
- [ 92.9 ,125. ],
- [ 82.7 ,123. ],
- [ 72.2 ,123. ],
- [ 61.7 ,123. ],
- [ 51.3 ,122. ],
- [ 42.1 ,118. ],
- [ 34.8 ,110. ],
- [ 28.7 ,102. ],
- [ 23.7 , 92. ],
- [ 19.9 , 83. ],
- [ 17.  , 72. ],
- [ 14.4 , 62. ],
- [ 12.2 , 52. ],
- [ 10.8 , 42. ],
- [ 11.1 , 31. ],
- [ 13.1 , 21. ],
- [ 14.6 , 10. ],
- [ 15.  ,  0. ],
- [-15.  , -0. ],
- [-16.  , 10. ],
- [-18.  , 21. ],
- [-19.  , 31. ],
- [-19.  , 41. ],
- [-18.  , 52. ],
- [-16.  , 62. ],
- [-14.  , 72. ],
- [-11.  , 82. ],
- [ -8.  , 92. ],
- [ -5.  ,102. ],
- [ -0.  ,112. ],
- [  5.  ,121. ],
- [ 12.  ,129. ],
- [ 18.  ,137. ],
- [ 27.  ,143. ],
- [ 36.  ,149. ],
- [ 45.  ,152. ],
- [ 56.  ,153. ],
- [ 66.  ,153. ],
- [ 77.  ,153. ],
- [ 87.  ,155. ],
- [ 96.  ,159. ],
- [106.  ,164. ],
- [116.  ,168. ],
- [125.  ,171. ],
- [136.  ,173. ],
- [146.  ,175. ],
- [156.  ,177. ],
- [167.  ,177. ],
- [177.  ,176. ],
- [187.  ,174. ],
- [197.  ,170. ],
- [207.  ,166. ]])
+numpy_points = np.array([[-136.3,  256. ],
+ [-125.8,  255. ],
+ [-115.5,  253. ],
+ [-105.6,  249. ],
+ [ -96.2,  245. ],
+ [ -87.4,  239. ],
+ [ -79.5,  232. ],
+ [ -72.5,  224. ],
+ [ -65.2,  217. ],
+ [ -57.3,  210. ],
+ [ -48.7,  204. ],
+ [ -39.6,  198. ],
+ [ -30.8,  193. ],
+ [ -22.3,  187. ],
+ [ -14.1,  180. ],
+ [  -6.4,  173. ],
+ [  -0.3,  164. ],
+ [   3.4,  154. ],
+ [   4.8,  144. ],
+ [   5.9,  134. ],
+ [   7.3,  123. ],
+ [   9. ,  113. ],
+ [  11.4,  103. ],
+ [  14.4,   93. ],
+ [  17.3,   82. ],
+ [  19.8,   72. ],
+ [  21.9,   62. ],
+ [  23.1,   52. ],
+ [  22.9,   41. ],
+ [  21.5,   31. ],
+ [  18.9,   20. ],
+ [  15.9,   10. ],
+ [  15. ,   -0. ],
+ [ -15. ,    0. ],
+ [ -14. ,   10. ],
+ [ -13. ,   21. ],
+ [  -9. ,   30. ],
+ [  -7. ,   41. ],
+ [  -7. ,   51. ],
+ [  -8. ,   61. ],
+ [ -11. ,   71. ],
+ [ -13. ,   81. ],
+ [ -17. ,   91. ],
+ [ -19. ,  101. ],
+ [ -21. ,  111. ],
+ [ -23. ,  122. ],
+ [ -24. ,  132. ],
+ [ -25. ,  142. ],
+ [ -28. ,  152. ],
+ [ -36. ,  159. ],
+ [ -44. ,  165. ],
+ [ -52. ,  171. ],
+ [ -61. ,  176. ],
+ [ -70. ,  182. ],
+ [ -78. ,  188. ],
+ [ -86. ,  195. ],
+ [ -93. ,  202. ],
+ [-100. ,  210. ],
+ [-108. ,  217. ],
+ [-117. ,  222. ],
+ [-127. ,  225. ],
+ [-138. ,  226. ]])
 
 start_point = Point(0,0)
 
@@ -89,6 +88,10 @@ def points_inside(polygon, points):
             points_inside_polygon.append(points[i])
             distances.append(mid.distance(points[i]))
 
+    if distances == []:
+        print('finished')
+        closest_point = 0
+        return points_inside_polygon, closest_point
     closest = distances.index(min(distances))
     print('point', closest)
     print(points_inside_polygon[closest])
@@ -125,7 +128,10 @@ def calculate_angle(points):
     p23 = math.sqrt((points[-1][0]-points[-3][0])**2 + (points[-1][1]-points[-3][1])**2)
     p13 = math.sqrt((points[-2][0]-points[-3][0])**2 + (points[-2][1]-points[-3][1])**2)
 
+
     radians = np.arccos((p12**2 + p13**2 - p23**2)/(2 * p12 * p13))
+   
+    print(p12, p13, p23)
     radians = math.pi - radians
     angle = radians*(180/math.pi)
     #print(angle)
@@ -134,6 +140,10 @@ def calculate_angle(points):
         radians = -radians
     return radians
 
+def remove_point(arr1, point_to_remove):
+    arr2 = np.array([[point_to_remove[0], point_to_remove[1]]])
+    delta = set(map(tuple, arr2))
+    return np.fromiter((x for xs in arr1 if tuple(xs) not in delta for x in xs), dtype=arr1.dtype).reshape(-1, arr1.shape[-1])
 
 
 #test points
@@ -145,63 +155,123 @@ points = nparray_to_pointarray(numpy_points)
 
 
     # right
-start = time.time()
+
 
 right_cones = [(15,-1)]
-vector = (0,0)
-deg90 = -3.14/2
+right_vector = (0,0)
+right_deg90 = -3.14/2
 
-right_shape = translate_poly(polygon, vector)
-right_shape = rotate_poly(right_shape, deg90, vector)
-points_in, closest = points_inside(right_shape, points)
-ex_points = extract_points_shapely(points_in)
-closest_point = (closest.x, closest.y)  #next point to go to
-right_cones.append(closest_point)
+right_shape = translate_poly(polygon, right_vector)
+right_shape = rotate_poly(right_shape, right_deg90, right_vector)
+right_points_in, right_closest = points_inside(right_shape, points)
+right_ex_points = extract_points_shapely(right_points_in)
+right_closest_point = (right_closest.x, right_closest.y)  #next point to go to
+right_cones.append(right_closest_point)
 
-print(closest_point) 
+print(right_closest_point,' right') 
 
-plt.scatter(ex_points[0],ex_points[1])
+plt.scatter(right_ex_points[0],right_ex_points[1])
 plt.plot(right_shape.exterior.xy[0], right_shape.exterior.xy[1])
 plt.show()
 
-vector = closest_point
-second_right_shape = translate_poly(right_shape, vector)
-second_right_shape = rotate_poly(second_right_shape, 0, vector)
-points_in, closest = points_inside(second_right_shape, points)
-ex_points = extract_points_shapely(points_in)
-closest_point = (closest.x, closest.y)  #next point to go to
-right_cones.append(closest_point)
+right_vector = right_closest_point
+second_right_shape = translate_poly(right_shape, right_vector)
+second_right_shape = rotate_poly(second_right_shape, 0, right_vector)
+right_points_in, right_closest = points_inside(second_right_shape, points)
+right_ex_points = extract_points_shapely(right_points_in)
+right_closest_point = (right_closest.x, right_closest.y)  #next point to go to
+right_cones.append(right_closest_point)
 
-print(closest_point) 
+print(right_closest_point, ' right') 
 print(right_cones)
 print(calculate_angle(right_cones))
 
 
 
-plt.scatter(ex_points[0],ex_points[1])
+plt.scatter(right_ex_points[0],right_ex_points[1])
 plt.plot(second_right_shape.exterior.xy[0], second_right_shape.exterior.xy[1])
 plt.show()
 
-# now form this point it can be done in a loop
+    # left
 
-for i in range(9):
-    rads = calculate_angle(right_cones)
-    vector = closest_point
 
-    third_right_shape = translate_poly(second_right_shape, vector)
-    third_right_shape = rotate_poly(third_right_shape, rads, vector)
-    points_in, closest = points_inside(third_right_shape, points)
-    ex_points = extract_points_shapely(points_in)
-    closest_point = (closest.x, closest.y)  #next point to go to
-    right_cones.append(closest_point)
-    print(right_cones)
+left_cones = [(-15,-1)]
+left_vector = (0,0)
+left_deg90 = 3.14/2
 
-    plt.scatter(ex_points[0],ex_points[1])
-    plt.plot(third_right_shape.exterior.xy[0], third_right_shape.exterior.xy[1])
-    plt.show()
+left_shape = translate_poly(polygon, left_vector)
+left_shape = rotate_poly(left_shape, left_deg90, left_vector)
+left_points_in, left_closest = points_inside(left_shape, points)
+left_ex_points = extract_points_shapely(left_points_in)
+left_closest_point = (left_closest.x, left_closest.y)  #next point to go to
+left_cones.append(left_closest_point)
 
-plt.scatter(*zip(*numpy_points))
+print(left_closest_point, ' left') 
+
+plt.scatter(left_ex_points[0],left_ex_points[1], edgecolors='Yellow')
+plt.plot(left_shape.exterior.xy[0], left_shape.exterior.xy[1])
+plt.show()
+
+left_vector = left_closest_point
+second_left_shape = translate_poly(left_shape, left_vector)
+second_left_shape = rotate_poly(second_left_shape, 0, left_vector)
+left_points_in, left_closest = points_inside(second_left_shape, points)
+left_ex_points = extract_points_shapely(left_points_in)
+left_closest_point = (left_closest.x, left_closest.y)  #next point to go to
+left_cones.append(left_closest_point)
+
+print(left_closest_point, ' left') 
+print(left_cones)
+print(calculate_angle(left_cones))
+
+plt.scatter(left_ex_points[0], left_ex_points[1], edgecolors='Yellow')
+
+plt.plot(second_left_shape.exterior.xy[0], second_left_shape.exterior.xy[1])
+plt.show()
+
+
+while 1:
+    right_rads = calculate_angle(right_cones)
+    right_vector = right_closest_point
+
+    third_right_shape = translate_poly(second_right_shape, right_vector)
+    third_right_shape = rotate_poly(third_right_shape, right_rads, right_vector)
+    right_points_in, right_closest = points_inside(third_right_shape, points)
+    if right_closest  == 0:
+        break   # powinno byc go to left
+    right_ex_points = extract_points_shapely(right_points_in)
+    right_closest_point = (right_closest.x, right_closest.y)  #next point to go to
+    right_cones.append(right_closest_point)
+    #points = remove_point(points, right_closest_point)
+    print(right_cones,' right')
+    
+    # plt.scatter(right_ex_points[0], right_ex_points[1])
+    # plt.plot(third_right_shape.exterior.xy[0], third_right_shape.exterior.xy[1])
+    # plt.show()
+
+
+    left_rads = calculate_angle(left_cones)
+    left_vector = left_closest_point
+
+    third_left_shape = translate_poly(second_left_shape, left_vector)
+    third_left_shape = rotate_poly(third_left_shape, left_rads, left_vector)
+    left_points_in, left_closest = points_inside(third_left_shape, points)
+    if left_closest  == 0:
+        break
+    left_ex_points = extract_points_shapely(left_points_in)
+    left_closest_point = (left_closest.x, left_closest.y)  #next point to go to
+    left_cones.append(left_closest_point)
+    #points = remove_point(points, left_closest_point)
+    print(left_cones, ' left')
+
+    # plt.scatter(left_ex_points[0],left_ex_points[1], edgecolors='Yellow')
+    # plt.plot(third_left_shape.exterior.xy[0], third_left_shape.exterior.xy[1])
+    # plt.show()
+
+plt.scatter(*zip(*numpy_points), edgecolors='Black')
 plt.show()
 
 plt.scatter(*zip(*right_cones))
+
+plt.scatter(*zip(*left_cones), edgecolors='Yellow')
 plt.show()
